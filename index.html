@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Tetris</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <h1>AI Tetris</h1>
+    <div class="game-container">
+        <canvas id="tetris" width="240" height="480"></canvas>
+        <div class="sidebar">
+            <div>
+                <h2>SCORE</h2>
+                <p id="score">0</p>
+            </div>
+            <div>
+                <h2>NEXT</h2>
+                <canvas id="next" width="120" height="120"></canvas>
+            </div>
+            <button id="aiToggle">AI is ON</button>
+            <div class="instructions">
+                <h3>Controls (when AI is OFF)</h3>
+                <p><strong>Left/Right:</strong> Move Piece</p>
+                <p><strong>Up:</strong> Rotate Piece</p>
+                <p><strong>Down:</strong> Soft Drop</p>
+                <p><strong>Space:</strong> Hard Drop</p>
+            </div>
+        </div>
+    </div>
+    <script src="script.js"></script>
+</body>
+</html>
