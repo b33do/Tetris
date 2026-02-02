@@ -1,45 +1,85 @@
-# Tetris
-A retro-style Tetris game built in JavaScript, featuring a powerful heuristic AI that analyzes every possible move to clear lines and survive.
+# Tetris (with AI Player)
 
-AI Tetris in JavaScript 🤖
-A classic implementation of Tetris built with pure HTML, CSS, and JavaScript. This project features a sophisticated AI that can be toggled on and off, allowing you to either play the game yourself or watch the AI strive for the perfect game.
+This is a browser-based Tetris game I built using plain **HTML, CSS, and JavaScript**.  
+In addition to manual play, the game includes an optional AI player that evaluates the board and automatically places pieces.
 
-✨ Features
-Heuristic AI Player: A powerful AI that calculates the optimal placement for each piece based on the state of the board.
+The goal of this project was to understand game loops, grid-based logic, and simple decision-making algorithms — not to perfectly recreate competitive Tetris.
 
-Manual Player Mode: Take control and play a classic game of Tetris yourself.
+---
 
-Next Piece Preview: A dedicated window shows you which Tetromino is coming up next, allowing for better planning.
+## Features
 
-Live Score Tracking: Your score updates in real-time as you clear lines.
+- **Playable Tetris**  
+  Fully playable with keyboard controls.
 
-Retro Terminal Aesthetics: A clean, glowing UI inspired by classic computer terminals.
+- **Toggleable AI Mode**  
+  You can switch between playing manually and letting the AI control the game.
 
-🧠 How the AI Works
-The AI is the core of this project. It doesn't follow simple rules; it uses a heuristic scoring algorithm to evaluate every possible move for the current piece. For each potential placement (all rotations and horizontal positions), it simulates the move and gives the resulting board a score based on four key metrics:
+- **Next Piece Preview**  
+  Shows the upcoming tetromino to allow planning (for both player and AI).
 
-Aggregate Height: The total height of all columns. The AI tries to keep this as low as possible.
+- **Score Tracking**  
+  Score updates as lines are cleared.
 
-Completed Lines: The number of lines that would be cleared. The AI prioritizes moves that clear lines.
+- **Simple Retro UI**  
+  Styled with a terminal-inspired look using CSS.
 
-Holes: The number of empty cells that have filled cells above them. The AI works hard to avoid creating holes.
+---
 
-Bumpiness: The variation in height between adjacent columns. The AI aims to keep the top surface of the stack as flat as possible.
+## AI Overview
 
-The AI then executes the move with the highest calculated score, instantly dropping the piece into the most strategic position.
+The AI is rule-based and heuristic-driven — it does **not** learn or adapt over time.
 
-🚀 How to Run
-No installation is needed! This project runs directly in the browser.
+For each new piece, the AI:
+1. Tries every possible rotation
+2. Tries every valid horizontal position
+3. Simulates dropping the piece
+4. Scores the resulting board
+5. Chooses the move with the best score
 
-Clone this repository to your computer.
+### Board Evaluation Metrics
 
-Open the index.html file in your web browser.
+Each simulated board state is scored using these factors:
 
-🎮 Controls (Player Mode)
-Left/Right Arrow: Move the piece horizontally.
+- **Aggregate column height**  
+  Lower total height is preferred.
 
-Up Arrow: Rotate the piece.
+- **Completed lines**  
+  Clearing lines is strongly rewarded.
 
-Down Arrow: Soft drop the piece (move it down faster).
+- **Holes**  
+  Empty cells beneath filled cells are penalized.
 
-Space Bar: Hard drop the piece (instantly place it at the bottom).
+- **Surface bumpiness**  
+  Large height differences between adjacent columns are penalized.
+
+These values are combined into a weighted score, and the highest-scoring move is executed.
+
+---
+
+## Controls (Manual Mode)
+
+- **Left / Right Arrow** – Move piece
+- **Up Arrow** – Rotate
+- **Down Arrow** – Soft drop
+- **Space** – Hard drop
+
+---
+
+## Running the Project
+
+No build tools or dependencies are required.
+
+1. Clone or download the repository
+2. Open `index.html` in any modern browser
+3. Play manually or enable AI mode
+
+---
+
+## Notes
+
+This project is intentionally kept lightweight and framework-free to focus on:
+- Game state management
+- Grid-based collision logic
+- Simple AI heuristics
+- Clean separation between rendering, input, and logic
