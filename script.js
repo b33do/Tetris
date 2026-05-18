@@ -5,6 +5,15 @@ const nextCanvas = document.getElementById('next');
 const nextContext = nextCanvas.getContext('2d');
 const scoreElement = document.getElementById('score');
 const aiToggleButton = document.getElementById('aiToggle');
+const statusDot = document.getElementById('statusDot');
+const statusText = document.getElementById('statusText');
+
+// Overlay elements
+const overlay = document.getElementById('overlay');
+const overlayTitle = document.getElementById('overlayTitle');
+const overlaySubtitle = document.getElementById('overlaySubtitle');
+const btnPlayerMode = document.getElementById('btnPlayerMode');
+const btnAiMode = document.getElementById('btnAiMode');
 
 // Game constants
 const COLS = 10;
@@ -19,7 +28,17 @@ nextContext.canvas.width = NEXT_BOX_SIZE * BLOCK_SIZE;
 nextContext.canvas.height = NEXT_BOX_SIZE * BLOCK_SIZE;
 
 // Tetrominoes and colors
-const COLORS = [null, '#FF0D72', '#0DC2FF', '#0DFF72', '#F538FF', '#FF8E0D', '#FFE138', '#3877F5'];
+const COLORS = [
+    null, 
+    '#00e5ff', // I - Cyan
+    '#0055ff', // O - Blue
+    '#ffaa00', // T - Orange
+    '#ffe600', // S - Yellow
+    '#00ff44', // Z - Green
+    '#b52dff', // L - Purple
+    '#ff2d75'  // J - Neon Pink
+];
+
 const SHAPES = [
     [], // Empty shape
     [[1, 1, 1, 1]], // I
@@ -37,8 +56,143 @@ let score;
 let piece;
 let nextPiece;
 let isAiActive = true;
+let isGameOver = false;
 let dropCounter = 0;
 let dropInterval = 1000; // ms for player drop
+let animationId;
+
+// --- Menus & Overlays ---
+
+function showMenu(title, subtitle, isLost = false) {
+    overlay.classList.remove('game-over');
+    if (isLost) overlay.classList.add('game-over');
+    
+    overlayTitle.textContent = title;
+    overlaySubtitle.textContent = subtitle;
+    overlay.classList.add('active');
+    cancelAnimationFrame(animationId);
+}
+
+function hideMenu() {
+    overlay.classList.remove('active');
+}
+
+btnPlayerMode.addEventListener('click', () => {
+    isAiActive = false;
+    aiToggleButton.textContent = 'Player Mode';
+    aiToggleButton.classList.add('player-mode');
+    hideMenu();
+    init();
+});
+
+btnAiMode.addEventListener('click', () => {
+    isAiActive = true;
+    aiToggleButton.textContent = 'AI is ON';
+    aiToggleButton.classList.remove('player-mode');
+    hideMenu();
+    init();
+});
+
+function updateStatusUI() {
+    statusDot.classList.remove('paused', 'game-over');
+    if (isGameOver) {
+        statusDot.classList.add('game-over');
+        statusText.textContent = 'Game Over';
+    } else if (isAiActive) {
+        statusText.textContent = 'AI Running';
+    } else {
+        statusText.textContent = 'Player Mode';
+    }
+}
+
+// --- Visual Helper: Rounded Rectangle ---
+function drawRoundedRect(ctx, px, py, w, h, r) {
+    ctx.beginPath();
+    ctx.moveTo(px + r, py);
+    ctx.lineTo(px + w - r, py);
+    ctx.arcTo(px + w, py, px + w, py + r, r);
+    ctx.lineTo(px + w, py + h - r);
+    ctx.arcTo(px + w, py + h, px + w - r, py + h, r);
+    ctx.lineTo(px + r, py + h);
+    ctx.arcTo(px, py + h, px, py + h - r, r);
+    ctx.lineTo(px, py + r);
+    ctx.arcTo(px, py, px + r, py, r);
+    ctx.closePath();
+}
+
+function drawBlock(ctx, x, y, color) {
+    const padding = 1;
+    const size = BLOCK_SIZE - padding * 2;
+    const radius = 3;
+    const px = x * BLOCK_SIZE + padding;
+    const py = y * BLOCK_SIZE + padding;
+
+    // Inner neon block
+    ctx.fillStyle = color;
+    drawRoundedRect(ctx, px, py, size, size, radius);
+    ctx.fill();
+
+    // Subtle inset glow effect
+    ctx.strokeStyle = 'rgba(255, 255, 255, 0.4)';
+    ctx.lineWidth = 1;
+    drawRoundedRect(ctx, px + 1, py + 1, size - 2, size - 2, radius - 1);
+    ctx.stroke();
+}
+
+function drawGrid(ctx, cols, rows, width, height) {
+    ctx.strokeStyle = 'rgba(255, 255, 255, 0.03)';
+    ctx.lineWidth = 1;
+    for (let x = 0; x <= cols; x++) {
+        ctx.beginPath();
+        ctx.moveTo(x * BLOCK_SIZE, 0);
+        ctx.lineTo(x * BLOCK_SIZE, height);
+        ctx.stroke();
+    }
+    for (let y = 0; y <= rows; y++) {
+        ctx.beginPath();
+        ctx.moveTo(0, y * BLOCK_SIZE);
+        ctx.lineTo(width, y * BLOCK_SIZE);
+        ctx.stroke();
+    }
+}
+
+function drawMatrix(matrix, offset, ctx) {
+    matrix.forEach((row, y) => {
+        row.forEach((value, x) => {
+            if (value !== 0) {
+                const color = COLORS[value] || '#777';
+                drawBlock(ctx, x + offset.x, y + offset.y, color);
+            }
+        });
+    });
+}
+
+function draw() {
+    // Main board
+    context.fillStyle = '#050510';
+    context.fillRect(0, 0, canvas.width, canvas.height);
+    drawGrid(context, COLS, ROWS, canvas.width, canvas.height);
+    
+    if (board) {
+        drawMatrix(board, { x: 0, y: 0 }, context);
+    }
+    if (piece) {
+        drawMatrix(piece.matrix, { x: piece.x, y: piece.y }, context);
+    }
+
+    // Next piece
+    nextContext.fillStyle = '#050510';
+    nextContext.fillRect(0, 0, nextCanvas.width, nextCanvas.height);
+    drawGrid(nextContext, NEXT_BOX_SIZE, NEXT_BOX_SIZE, nextCanvas.width, nextCanvas.height);
+    
+    if (nextPiece) {
+        const offsetX = (NEXT_BOX_SIZE - nextPiece.matrix[0].length) / 2;
+        const offsetY = (NEXT_BOX_SIZE - nextPiece.matrix.length) / 2;
+        drawMatrix(nextPiece.matrix, { x: offsetX, y: offsetY }, nextContext);
+    }
+}
+
+// --- Game Functions ---
 
 function createBoard() {
     return Array.from({ length: ROWS }, () => Array(COLS).fill(0));
@@ -137,51 +291,20 @@ function resetPiece() {
     
     if (collide(board, piece)) {
         // Game Over
-        board.forEach(row => row.fill(8)); // Visual effect for game over
-        setTimeout(init, 500); // Restart after a brief delay
+        isGameOver = true;
+        updateStatusUI();
+        showMenu('GAME OVER', 'Score: ' + score, true);
         return;
     }
     
-    if (isAiActive) {
+    if (isAiActive && !isGameOver) {
         setTimeout(aiMove, AI_DELAY);
     }
 }
 
-function draw() {
-    // Draw main board
-    context.fillStyle = '#000';
-    context.fillRect(0, 0, canvas.width, canvas.height);
-    drawMatrix(board, { x: 0, y: 0 }, context);
-    if (piece) {
-        drawMatrix(piece.matrix, { x: piece.x, y: piece.y }, context);
-    }
-
-    // Draw next piece
-    nextContext.fillStyle = '#000';
-    nextContext.fillRect(0, 0, nextCanvas.width, nextCanvas.height);
-    if (nextPiece) {
-        const offsetX = (NEXT_BOX_SIZE - nextPiece.matrix[0].length) / 2;
-        const offsetY = (NEXT_BOX_SIZE - nextPiece.matrix.length) / 2;
-        drawMatrix(nextPiece.matrix, { x: offsetX, y: offsetY }, nextContext);
-    }
-}
-
-function drawMatrix(matrix, offset, ctx) {
-    matrix.forEach((row, y) => {
-        row.forEach((value, x) => {
-            if (value !== 0) {
-                ctx.fillStyle = COLORS[value] || '#777'; // Gray for game over effect
-                ctx.fillRect((x + offset.x) * BLOCK_SIZE, (y + offset.y) * BLOCK_SIZE, BLOCK_SIZE, BLOCK_SIZE);
-                ctx.strokeStyle = '#222';
-                ctx.strokeRect((x + offset.x) * BLOCK_SIZE, (y + offset.y) * BLOCK_SIZE, BLOCK_SIZE, BLOCK_SIZE);
-            }
-        });
-    });
-}
-
 // AI LOGIC
 function aiMove() {
-    if (!piece || !isAiActive) return;
+    if (!piece || !isAiActive || isGameOver) return;
     let bestMove = findBestMove();
     if (bestMove) {
         piece.matrix = bestMove.matrix;
@@ -287,10 +410,11 @@ function calculateBoardScore(board) {
            (bumpiness * bumpinessWeight);
 }
 
-
 // GAME LOOP
 let lastTime = 0;
 function update(time = 0) {
+    if (isGameOver) return;
+    
     if (!isAiActive) {
         const deltaTime = time - lastTime;
         lastTime = time;
@@ -300,12 +424,12 @@ function update(time = 0) {
         }
     }
     draw();
-    requestAnimationFrame(update);
+    animationId = requestAnimationFrame(update);
 }
 
 // Controls
 document.addEventListener('keydown', event => {
-    if (isAiActive) return;
+    if (isAiActive || isGameOver) return;
 
     if (event.key === 'ArrowLeft') {
         piece.x--;
@@ -335,9 +459,11 @@ document.addEventListener('keydown', event => {
 });
 
 aiToggleButton.addEventListener('click', () => {
+    if (isGameOver) return;
     isAiActive = !isAiActive;
     aiToggleButton.textContent = isAiActive ? 'AI is ON' : 'Player Mode';
     aiToggleButton.classList.toggle('player-mode', !isAiActive);
+    updateStatusUI();
     if (isAiActive) {
         setTimeout(aiMove, AI_DELAY);
     }
@@ -345,15 +471,23 @@ aiToggleButton.addEventListener('click', () => {
 
 // Start game
 function init() {
+    isGameOver = false;
     board = createBoard();
     score = 0;
     scoreElement.innerText = score;
     piece = createPiece(Math.floor(Math.random() * (SHAPES.length - 1)) + 1);
     nextPiece = createPiece(Math.floor(Math.random() * (SHAPES.length - 1)) + 1);
+    updateStatusUI();
+    
     if (isAiActive) {
         setTimeout(aiMove, AI_DELAY);
     }
+    
+    lastTime = 0;
+    update();
 }
 
-init();
-update();
+// Initial state (before clicking start)
+board = createBoard();
+draw();
+updateStatusUI();

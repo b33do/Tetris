@@ -3,29 +3,52 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AI Tetris</title>
+    <title>AI Tetris — Premium Edition</title>
+    <meta name="description" content="A neon glassmorphism styled Tetris game featuring an AI solver.">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&family=Outfit:wght@400;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
-    <h1>AI Tetris</h1>
+    <h1 class="game-title"><span class="accent">AI</span> Tetris</h1>
     <div class="game-container">
-        <canvas id="tetris" width="240" height="480"></canvas>
-        <div class="sidebar">
-            <div>
-                <h2>SCORE</h2>
-                <p id="score">0</p>
+        
+        <div class="canvas-wrapper" style="position: relative;">
+            <canvas id="tetris" width="240" height="480"></canvas>
+            <div id="overlay" class="overlay active">
+                <h2 id="overlayTitle">AI TETRIS</h2>
+                <p id="overlaySubtitle">Select a game mode</p>
+                <div class="overlay-buttons">
+                    <button id="btnPlayerMode" class="menu-btn">Player Mode</button>
+                    <button id="btnAiMode" class="menu-btn ai-btn">Watch AI</button>
+                </div>
             </div>
-            <div>
-                <h2>NEXT</h2>
+        </div>
+
+        <div class="sidebar">
+            <div class="stat-card">
+                <div class="stat-label">Score</div>
+                <div class="stat-value" id="score">0</div>
+            </div>
+            
+            <div class="next-piece-container">
+                <div class="stat-label">Next Piece</div>
                 <canvas id="next" width="120" height="120"></canvas>
             </div>
+            
             <button id="aiToggle">AI is ON</button>
+            <div class="status-indicator">
+                <div class="status-dot" id="statusDot"></div>
+                <span id="statusText">AI Running</span>
+            </div>
+
             <div class="instructions">
-                <h3>Controls (when AI is OFF)</h3>
-                <p><strong>Left/Right:</strong> Move Piece</p>
-                <p><strong>Up:</strong> Rotate Piece</p>
-                <p><strong>Down:</strong> Soft Drop</p>
-                <p><strong>Space:</strong> Hard Drop</p>
+                <h3>Controls</h3>
+                <div class="key-hint"><kbd>←</kbd><kbd>→</kbd> <span>Move</span></div>
+                <div class="key-hint"><kbd>↑</kbd> <span>Rotate</span></div>
+                <div class="key-hint"><kbd>↓</kbd> <span>Soft Drop</span></div>
+                <div class="key-hint"><kbd>Space</kbd> <span>Hard Drop</span></div>
             </div>
         </div>
     </div>
